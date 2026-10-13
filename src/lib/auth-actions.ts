@@ -52,7 +52,8 @@ function authMessage(error: AuthError) {
   }
   if (error.name === "AuthRetryableFetchError") return "Couldn't reach the login service. Check your connection and try again.";
   if (/invalid api key/i.test(error.message)) {
-    return "Login is misconfigured: the Supabase anon key is invalid. Check SUPABASE_ANON_KEY in your environment variables and redeploy.";
+    console.error("[CreatorKit] Supabase rejected the anon key — check the Supabase key in the environment variables.");
+    return "Login isn't available right now. Please try again in a few minutes.";
   }
   console.error("[CreatorKit] auth error:", error.code, error.message);
   return "Something went wrong. Please try again.";

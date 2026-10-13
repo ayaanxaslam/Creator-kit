@@ -15,7 +15,8 @@ const idSchema = z.uuid();
 
 function storageError(err: unknown) {
   if (err instanceof StorageNotSetUpError) {
-    return Response.json({ error: err.message, code: "storage_not_set_up" }, { status: 503 });
+    console.error("[CreatorKit]", err.message);
+    return Response.json({ error: "Saved items aren't available yet.", code: "storage_not_set_up" }, { status: 503 });
   }
   console.error("[CreatorKit] generations API:", err);
   return Response.json({ error: "Couldn't reach your saved items. Please try again.", code: "storage_error" }, { status: 502 });

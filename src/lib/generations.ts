@@ -166,7 +166,7 @@ export async function trySaveGeneration(tool: Tool, input: Record<string, string
     const id = await saveGeneration(tool, titleFor(tool, input, output), input, output);
     return { id, saved: true as const };
   } catch (err) {
-    if (!(err instanceof StorageNotSetUpError)) console.error("[CreatorKit] couldn't save generation:", err);
+    console.error("[CreatorKit] couldn't save generation:", err instanceof StorageNotSetUpError ? err.message : err);
     return { id: null, saved: false as const, saveError: err instanceof StorageNotSetUpError ? "not_set_up" : "failed" };
   }
 }

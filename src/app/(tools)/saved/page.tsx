@@ -58,10 +58,10 @@ async function SavedList({ searchParams }: { searchParams: SearchParams }) {
     const notSetUp = err instanceof StorageNotSetUpError;
     return (
       <div role="alert" className="rounded-xl border border-danger/30 bg-danger-soft p-5 text-sm leading-relaxed">
-        <p className="font-semibold text-foreground">{notSetUp ? "Saving isn't set up yet" : "Couldn't load your saved items"}</p>
+        <p className="font-semibold text-foreground">{notSetUp ? "Saved items aren't available yet" : "Couldn't load your saved items"}</p>
         <p className="mt-1 text-muted">
           {notSetUp
-            ? "The database table for saved items hasn't been created. Run the SQL file from supabase/migrations in the Supabase SQL Editor."
+            ? "Your saved items will appear here soon. Please check back in a little while."
             : "Please refresh the page to try again."}
         </p>
       </div>

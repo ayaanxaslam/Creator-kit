@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AuthCard, Notice } from "@/components/auth/AuthCard";
 import { LoginForm } from "@/components/auth/forms";
-import { AUTH_NOT_CONFIGURED, getSupabaseConfig } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Log in" };
 
@@ -32,7 +31,6 @@ export default function LoginPage({ searchParams }: { searchParams: SearchParams
       }
     >
       <div className="space-y-4">
-        {!getSupabaseConfig() && <Notice tone="error">{AUTH_NOT_CONFIGURED}</Notice>}
         <Suspense fallback={<LoginForm />}>
           <LoginBody searchParams={searchParams} />
         </Suspense>

@@ -97,7 +97,7 @@ export function SaveIndicator({ state }: { state: SaveState }) {
     ),
     saving: <>Saving…</>,
     error: <span className="text-danger">Couldn&apos;t save changes — check your connection</span>,
-    not_set_up: <span>Not saved: saving isn&apos;t set up yet</span>,
+    not_set_up: <span>Not saved — saving isn&apos;t available yet</span>,
   }[state];
   return (
     <span className="inline-flex items-center gap-1 text-xs text-muted" aria-live="polite">

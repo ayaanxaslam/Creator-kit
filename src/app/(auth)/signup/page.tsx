@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AuthCard, Notice } from "@/components/auth/AuthCard";
+import { AuthCard } from "@/components/auth/AuthCard";
 import { SignupForm } from "@/components/auth/forms";
-import { AUTH_NOT_CONFIGURED, getSupabaseConfig } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Create an account" };
 
@@ -21,7 +20,6 @@ export default function SignupPage() {
       }
     >
       <div className="space-y-4">
-        {!getSupabaseConfig() && <Notice tone="error">{AUTH_NOT_CONFIGURED}</Notice>}
         <SignupForm />
       </div>
     </AuthCard>

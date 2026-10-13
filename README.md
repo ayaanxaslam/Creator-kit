@@ -27,7 +27,9 @@ SUPABASE_URL=https://xxxx.supabase.co
 SUPABASE_ANON_KEY=...
 ```
 
-The Supabase values are in the Supabase dashboard under Project Settings → API. They're only read on the server, so the `NEXT_PUBLIC_` prefix is optional. Accepted names: `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_URL`, and for the key `SUPABASE_ANON_KEY`, `PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_PUBLIC_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_KEY` (each also with a `NEXT_PUBLIC_` prefix where applicable). `OPENAI_KEY` works in place of `OPENAI_API_KEY`.
+The Supabase values are in the Supabase dashboard under Project Settings → API. They're only read on the server, so the `NEXT_PUBLIC_` prefix is optional. The app also recognises the values themselves — a `https://<project>.supabase.co` address and a public anon / publishable key — whatever the variables are called; secret / service_role keys are never used.
+
+To check a deployment, open `/api/health`: it reports whether login, the database table and the AI key are set up (yes/no only, never the values). Accepted names: `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_URL`, and for the key `SUPABASE_ANON_KEY`, `PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_PUBLIC_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_KEY` (each also with a `NEXT_PUBLIC_` prefix where applicable). `OPENAI_KEY` works in place of `OPENAI_API_KEY`.
 
 ### Supabase settings
 

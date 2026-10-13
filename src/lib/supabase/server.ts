@@ -8,7 +8,10 @@ import { getSupabaseConfig } from "./config";
 /** Create a per-request Supabase client bound to the request's auth cookies. */
 export async function createClient() {
   const config = getSupabaseConfig();
-  if (!config) return null;
+  if (!config) {
+    console.error("[CreatorKit] Supabase isn't configured: no Supabase URL / public anon key found in the environment variables.");
+    return null;
+  }
   const cookieStore = await cookies();
 
   return createServerClient(config.url, config.key, {

@@ -3,6 +3,7 @@ import "server-only";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import type { z } from "zod";
+import { getOpenAIKey } from "./supabase/config";
 import { getCurrentUser } from "./supabase/server";
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-5.4-mini";
@@ -24,11 +25,10 @@ export class GenerationError extends Error {
 let client: OpenAI | null = null;
 
 function getClient() {
-  // OPENAI_API_KEY is the standard name; OPENAI_KEY is accepted too.
-  const apiKey = (process.env.OPENAI_API_KEY || process.env.OPENAI_KEY)?.trim();
+  const apiKey = getOpenAIKey();
   if (!apiKey) {
     throw new GenerationError(
-      "AI generation isn't configured yet. Set OPENAI_API_KEY (in .env.local locally, or in your Vercel project's environment variables) and redeploy.",
+      "AI generation isn't available right now. Please try again in a few minutes.",
       503,
       "not_configured",
     );
@@ -85,21 +85,23 @@ export function errorResponse(err: unknown) {
   console.error("[CreatorKit] generation failed:", err);
 
   if (err instanceof OpenAI.AuthenticationError || err instanceof OpenAI.PermissionDeniedError) {
+    console.error("[CreatorKit] OpenAI rejected the API key — check the OpenAI key in the environment variables.");
     return Response.json(
-      { error: "The AI API key is invalid or lacks access. Check OPENAI_API_KEY.", code: "auth" },
+      { error: "AI generation isn't available right now. Please try again in a few minutes.", code: "auth" },
       { status: 503 },
     );
   }
   if (err instanceof OpenAI.NotFoundError) {
+    console.error(`[CreatorKit] OpenAI model "${MODEL}" isn't available to this API key — set OPENAI_MODEL to a model the key can use.`);
     return Response.json(
-      { error: `The AI model "${MODEL}" isn't available to this API key. Check OPENAI_MODEL.`, code: "model" },
+      { error: "AI generation isn't available right now. Please try again in a few minutes.", code: "model" },
       { status: 503 },
     );
   }
   if (err instanceof OpenAI.RateLimitError) {
     return Response.json(
       {
-        error: "Too many requests, or the API account is out of credits. Wait a moment and try again.",
+        error: "Too many requests right now. Wait a moment and try again.",
         code: "rate_limited",
       },
       { status: 429 },

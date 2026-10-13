@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AuthCard, Notice } from "@/components/auth/AuthCard";
 import { ForgotPasswordForm } from "@/components/auth/forms";
-import { AUTH_NOT_CONFIGURED, getSupabaseConfig } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Reset your password" };
 
@@ -21,7 +20,6 @@ export default function ForgotPasswordPage({ searchParams }: { searchParams: Sea
       }
     >
       <div className="space-y-4">
-        {!getSupabaseConfig() && <Notice tone="error">{AUTH_NOT_CONFIGURED}</Notice>}
         <Suspense>
           <LinkError searchParams={searchParams} />
         </Suspense>
