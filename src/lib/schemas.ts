@@ -6,6 +6,12 @@ import { z } from "zod";
 
 export const PLATFORMS = ["Instagram Reels", "TikTok", "YouTube Shorts"] as const;
 
+export const PLATFORM_LABELS: Record<string, string> = {
+  "Instagram Reels": "Reels",
+  TikTok: "TikTok",
+  "YouTube Shorts": "Shorts",
+};
+
 export const CONTENT_STYLES = [
   "Educational",
   "Entertaining",
@@ -33,6 +39,7 @@ const text = (label: string, min: number, max: number) =>
   z
     .string({ error: `${label} is required.` })
     .trim()
+    .min(1, `${label} is required.`)
     .min(min, `${label} must be at least ${min} characters.`)
     .max(max, `${label} must be ${max} characters or fewer.`);
 
@@ -57,7 +64,7 @@ export const scriptInputSchema = z.object({
 export type ScriptInput = z.infer<typeof scriptInputSchema>;
 
 export const shotsInputSchema = z.object({
-  idea: text("Video idea", 10, 600),
+  idea: text("Video idea", 5, 600),
   format: z.enum(FORMATS, { error: "Choose a format." }),
   duration: z.enum(DURATIONS, { error: "Choose a duration." }),
 });

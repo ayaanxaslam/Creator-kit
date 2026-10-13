@@ -2,25 +2,97 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --surface: #fafafa;
+  --surface-2: #f4f4f5;
+  --foreground: #0a0a0a;
+  --muted: #71717a;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --accent: #16a34a;
+  --accent-soft: #dcfce7;
+  --accent-fg: #15803d;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --inverse: #0a0a0a;
+  --inverse-fg: #fafafa;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    --surface: #111111;
+    --surface-2: #18181b;
+    --foreground: #fafafa;
+    --muted: #a1a1aa;
+    --border: #27272a;
+    --border-strong: #3f3f46;
+    --accent: #22c55e;
+    --accent-soft: rgba(34, 197, 94, 0.12);
+    --accent-fg: #4ade80;
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.1);
+    --inverse: #fafafa;
+    --inverse-fg: #0a0a0a;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-inverse: var(--inverse);
+  --color-inverse-fg: var(--inverse-fg);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --animate-fade-up: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
