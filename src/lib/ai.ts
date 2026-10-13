@@ -21,7 +21,7 @@ let client: Anthropic | null = null;
 function getClient() {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new GenerationError(
-      "AI generation isn't configured yet. Add ANTHROPIC_API_KEY to .env.local and restart the server.",
+      "AI generation isn't configured yet. Set ANTHROPIC_API_KEY (in .env.local locally, or in your Vercel project's environment variables) and redeploy.",
       503,
       "not_configured",
     );
