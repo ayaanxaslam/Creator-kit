@@ -8,7 +8,7 @@ import { CameraIcon } from "@/components/icons";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ResultsToolbar, ToolForm, ToolPage } from "@/components/ToolPage";
 import { Card, Field, Select, TextArea } from "@/components/ui";
-import { useGenerate } from "@/hooks/useGenerate";
+import { NON_RETRYABLE, useGenerate } from "@/hooks/useGenerate";
 import { formatShots } from "@/lib/format";
 import { DURATIONS, FORMATS, shotsInputSchema, type ShotsInput, type ShotsOutput } from "@/lib/schemas";
 import { validate } from "@/lib/validate";
@@ -83,7 +83,7 @@ function ShotsToolForm({ params }: { params: ReadonlyURLSearchParams }) {
         loading ? (
           <LoadingState messages={LOADING} rows={4} />
         ) : status === "error" && error ? (
-          <ErrorState message={error.message} onRetry={() => lastInput && generate(lastInput)} retryable={!["not_configured", "validation"].includes(error.code ?? "")} />
+          <ErrorState message={error.message} onRetry={() => lastInput && generate(lastInput)} retryable={!NON_RETRYABLE.includes(error.code ?? "")} />
         ) : data ? (
           <div className="animate-fade-up">
             <ResultsToolbar

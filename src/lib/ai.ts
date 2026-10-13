@@ -3,6 +3,7 @@ import "server-only";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import type { z } from "zod";
+import { getCurrentUser } from "./supabase/server";
 
 const MODEL = process.env.OPENAI_MODEL || "gpt-5.4-mini";
 
@@ -23,14 +24,16 @@ export class GenerationError extends Error {
 let client: OpenAI | null = null;
 
 function getClient() {
-  if (!process.env.OPENAI_API_KEY) {
+  // OPENAI_API_KEY is the standard name; OPENAI_KEY is accepted too.
+  const apiKey = (process.env.OPENAI_API_KEY || process.env.OPENAI_KEY)?.trim();
+  if (!apiKey) {
     throw new GenerationError(
       "AI generation isn't configured yet. Set OPENAI_API_KEY (in .env.local locally, or in your Vercel project's environment variables) and redeploy.",
       503,
       "not_configured",
     );
   }
-  client ??= new OpenAI({ timeout: 120_000, maxRetries: 2 });
+  client ??= new OpenAI({ apiKey, timeout: 120_000, maxRetries: 2 });
   return client;
 }
 
@@ -62,6 +65,15 @@ export async function generateStructured<T extends z.ZodType>(schema: T, name: s
     throw new GenerationError("The AI returned an incomplete result. Please try again.", 502, "bad_output");
   }
   return response.output_parsed as z.infer<T>;
+}
+
+/** Returns a 401 response when the request has no signed-in user, otherwise null. */
+export async function requireUser() {
+  if (await getCurrentUser()) return null;
+  return Response.json(
+    { error: "Your session has expired. Please log in again.", code: "unauthorized" },
+    { status: 401 },
+  );
 }
 
 /** Map any thrown error to a safe, user-facing JSON response. */

@@ -2,6 +2,9 @@
 
 import { useCallback, useRef, useState } from "react";
 
+/** Error codes where retrying the same request can't help. */
+export const NON_RETRYABLE = ["not_configured", "validation", "unauthorized"];
+
 type Status = "idle" | "loading" | "success" | "error";
 
 interface ApiError {

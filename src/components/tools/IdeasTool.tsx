@@ -8,7 +8,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ResultsToolbar, ToolForm, ToolPage } from "@/components/ToolPage";
 import { Card, Field, Segmented, Select, TextInput } from "@/components/ui";
 import { EditableText } from "@/components/EditableText";
-import { useGenerate } from "@/hooks/useGenerate";
+import { NON_RETRYABLE, useGenerate } from "@/hooks/useGenerate";
 import { formatIdea, formatIdeas } from "@/lib/format";
 import { CONTENT_STYLES, PLATFORMS, PLATFORM_LABELS, ideasInputSchema, type IdeasInput, type IdeasOutput } from "@/lib/schemas";
 import { validate } from "@/lib/validate";
@@ -85,7 +85,7 @@ export function IdeasTool() {
         loading ? (
           <LoadingState messages={LOADING} rows={5} />
         ) : status === "error" && error ? (
-          <ErrorState message={error.message} onRetry={() => lastInput && generate(lastInput)} retryable={!["not_configured", "validation"].includes(error.code ?? "")} />
+          <ErrorState message={error.message} onRetry={() => lastInput && generate(lastInput)} retryable={!NON_RETRYABLE.includes(error.code ?? "")} />
         ) : data ? (
           <div className="animate-fade-up">
             <ResultsToolbar

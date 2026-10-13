@@ -1,9 +1,12 @@
-import { errorResponse, generateStructured, readInput } from "@/lib/ai";
+import { errorResponse, generateStructured, readInput, requireUser } from "@/lib/ai";
 import { scriptInputSchema, scriptOutputSchema } from "@/lib/schemas";
 
 export const maxDuration = 120;
 
 export async function POST(request: Request) {
+  const unauthorized = await requireUser();
+  if (unauthorized) return unauthorized;
+
   const input = await readInput(request, scriptInputSchema);
   if (input.error) return input.error;
   const { topic, platform, audience, duration } = input.data;

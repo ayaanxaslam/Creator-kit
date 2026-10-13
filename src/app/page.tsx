@@ -26,8 +26,11 @@ export default function Home() {
                 {t.short}
               </Link>
             ))}
-            <Link href="/ideas" className={buttonClass("primary", "h-9 px-3.5")}>
-              Open app
+            <Link href="/login" className={buttonClass("ghost", "h-9 px-3")}>
+              Log in
+            </Link>
+            <Link href="/signup" className={buttonClass("primary", "h-9 px-3.5")}>
+              Sign up
             </Link>
           </nav>
         </div>
@@ -54,15 +57,15 @@ export default function Home() {
               CreatorKit turns your niche into video ideas, scripts and shot lists — specific to your audience and ready to film.
             </p>
             <div className="mt-9 flex animate-fade-up flex-col items-center justify-center gap-3 [animation-delay:180ms] sm:flex-row">
-              <Link href="/ideas" className={buttonClass("primary", "group h-11 w-full px-5 sm:w-auto")}>
-                Generate video ideas
+              <Link href="/signup" className={buttonClass("primary", "group h-11 w-full px-5 sm:w-auto")}>
+                Create your account
                 <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
-              <Link href="/script" className={buttonClass("secondary", "h-11 w-full px-5 sm:w-auto")}>
-                Write a script
+              <Link href="/login" className={buttonClass("secondary", "h-11 w-full px-5 sm:w-auto")}>
+                Log in
               </Link>
             </div>
-            <p className="mt-4 text-xs text-muted">No sign-up needed.</p>
+            <p className="mt-4 text-xs text-muted">All you need is an email and a password.</p>
           </div>
         </section>
 
@@ -116,10 +119,10 @@ export default function Home() {
           <div className="flex flex-col items-start justify-between gap-6 rounded-2xl bg-inverse px-6 py-10 text-inverse-fg sm:px-10 md:flex-row md:items-center">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight">Ready for your next video?</h2>
-              <p className="mt-1.5 text-sm opacity-70">Start with ideas, or jump straight to a script.</p>
+              <p className="mt-1.5 text-sm opacity-70">Create an account and get your first 10 ideas in under a minute.</p>
             </div>
             <Link
-              href="/ideas"
+              href="/signup"
               className="group inline-flex h-11 items-center gap-2 rounded-lg bg-accent px-5 text-sm font-medium text-white transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-inverse active:scale-[0.98]"
             >
               Get started

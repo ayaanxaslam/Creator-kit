@@ -8,6 +8,8 @@ Plan Instagram Reels, TikToks and YouTube Shorts in minutes.
 
 All results are editable in place, copyable, and can be regenerated. Ideas link straight into the script generator, and scripts link into the shot planner.
 
+Users sign up and log in with email and password (Supabase Auth). The tools, the account page and the AI endpoints require a signed-in user; the landing page is public.
+
 ## Setup
 
 Requires Node.js 20+.
@@ -17,11 +19,26 @@ npm install
 cp .env.example .env.local
 ```
 
-Add your OpenAI API key to `.env.local` (create one at https://platform.openai.com/api-keys):
+Fill in `.env.local`:
 
 ```
 OPENAI_API_KEY=sk-...
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_ANON_KEY=...
 ```
+
+The Supabase values are in the Supabase dashboard under Project Settings → API. They're only read on the server, so the `NEXT_PUBLIC_` prefix is optional. Accepted names: `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_URL`, and for the key `SUPABASE_ANON_KEY`, `PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_PUBLIC_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_KEY` (each also with a `NEXT_PUBLIC_` prefix where applicable). `OPENAI_KEY` works in place of `OPENAI_API_KEY`.
+
+### Supabase settings
+
+In the Supabase dashboard, go to **Authentication → URL Configuration**:
+
+- **Site URL**: your deployed URL, e.g. `https://your-app.vercel.app`
+- **Redirect URLs**: add `https://your-app.vercel.app/auth/confirm` and, for local development, `http://localhost:3000/auth/confirm`
+
+Email/password sign-in is enabled by default. If “Confirm email” is on (the default), new users must click the link in their confirmation email before logging in. Supabase's built-in email sender is heavily rate-limited (a few emails per hour); for real users, add your own SMTP provider under **Authentication → Emails → SMTP Settings**.
+
+No database tables are needed — accounts live in Supabase Auth.
 
 Then run:
 
@@ -36,11 +53,13 @@ Without a key the app still runs, but generation returns a clear “not configur
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `OPENAI_MODEL` | `gpt-5.4-mini` | Model used for all generations. Must support structured outputs. |
+| `NEXT_PUBLIC_SITE_URL` | detected from the request | Public URL used in sign-up and password reset email links |
 
 ## How it works
 
 - `src/app/api/{ideas,script,shots}/route.ts` — server-side route handlers. They validate input with Zod, call the OpenAI Responses API with structured outputs, and return schema-validated JSON. The API key is only read on the server (`src/lib/ai.ts` is marked `server-only`).
 - `src/lib/schemas.ts` — shared input/output schemas. The same input schemas validate forms in the browser and requests on the server.
+- `src/proxy.ts` refreshes the Supabase session on each request and redirects signed-out users from the tools to `/login`. Auth runs entirely on the server via server actions (`src/lib/auth-actions.ts`); email links land on `src/app/auth/confirm/route.ts`.
 - Errors (missing/invalid key, unavailable model, rate limits or no credits, timeouts, refusals) are mapped to friendly messages; details are logged server-side only.
 
 ## Scripts
@@ -54,6 +73,6 @@ Without a key the app still runs, but generation returns a clear “not configur
 
 ## Deploying
 
-Deploy anywhere that runs Next.js (e.g. Vercel). Set `OPENAI_API_KEY` as an environment variable in your host's dashboard — never commit it. Generation routes allow up to 120 seconds (`maxDuration`).
+Deploy anywhere that runs Next.js (e.g. Vercel). Set the environment variables above in your host's dashboard — never commit them — and redeploy after changing them. Generation routes allow up to 120 seconds (`maxDuration`).
 
-There is no rate limiting or authentication in this version, so anyone with the URL can use your API credits. Add rate limiting (or auth) before sharing a public deployment.
+Only signed-in users can generate, but there is no per-user usage limit yet. Set a monthly spend limit on your OpenAI account.
