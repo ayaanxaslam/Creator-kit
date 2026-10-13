@@ -2,13 +2,13 @@ import "server-only";
 
 import type { PostgrestError } from "@supabase/supabase-js";
 import type { z } from "zod";
-import { ideasOutputSchema, scriptOutputSchema, shotsOutputSchema } from "./schemas";
+import { scriptOutputSchema, shotsOutputSchema, storedIdeasSchema } from "./schemas";
 import { createClient } from "./supabase/server";
 
 export type Tool = "ideas" | "script" | "shots";
 
 export const TOOL_OUTPUT_SCHEMAS = {
-  ideas: ideasOutputSchema,
+  ideas: storedIdeasSchema,
   script: scriptOutputSchema,
   shots: shotsOutputSchema,
 } satisfies Record<Tool, z.ZodType>;
@@ -115,7 +115,7 @@ export async function previousIdeaTitles(limit = 60): Promise<string[]> {
       .limit(15);
     if (error) fail(error);
     const titles = (data as { output: unknown }[]).flatMap(({ output }) => {
-      const parsed = ideasOutputSchema.safeParse(output);
+      const parsed = storedIdeasSchema.safeParse(output);
       return parsed.success ? parsed.data.ideas.map((i) => i.title) : [];
     });
     return [...new Set(titles)].slice(0, limit);

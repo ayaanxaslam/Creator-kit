@@ -27,7 +27,7 @@ export function ToolPage({
         <p className="mt-1.5 max-w-2xl text-[15px] leading-relaxed text-muted">{description}</p>
       </header>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-8">
-        <div className="lg:sticky lg:top-10 lg:self-start">{form}</div>
+        <div className="space-y-4 lg:self-start">{form}</div>
         <section id="results" aria-label="Results" className="min-w-0 scroll-mt-20">
           {results}
         </section>

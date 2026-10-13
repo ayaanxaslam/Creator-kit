@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { CopyButton } from "@/components/CopyButton";
 import { ArrowRightIcon, LightbulbIcon } from "@/components/icons";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
@@ -17,12 +17,12 @@ import { validate } from "@/lib/validate";
 const LOADING = ["Studying your niche…", "Thinking like your audience…", "Writing scroll-stopping hooks…", "Polishing 10 ideas…"];
 
 /** Keyed on the query string so opening a saved item (?id=) always starts fresh. */
-export function IdeasTool() {
+export function IdeasTool({ profile }: { profile?: ReactNode }) {
   const params = useSearchParams();
-  return <IdeasToolForm key={params.toString()} savedId={params.get("id")} />;
+  return <IdeasToolForm key={params.toString()} savedId={params.get("id")} profile={profile} />;
 }
 
-function IdeasToolForm({ savedId }: { savedId: string | null }) {
+function IdeasToolForm({ savedId, profile }: { savedId: string | null; profile?: ReactNode }) {
   const [values, setValues] = useState({ niche: "", audience: "", platform: "TikTok", style: "" });
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [lastInput, setLastInput] = useState<IdeasInput | null>(null);
@@ -63,39 +63,42 @@ function IdeasToolForm({ savedId }: { savedId: string | null }) {
       title="Video Idea Generator"
       description="Tell us who you create for. Get 10 specific ideas, each with a title, an opening hook and why it works."
       form={
-        <ToolForm onSubmit={submit} loading={loading} hasResult={!!data}>
-          <Field id="niche" label="Niche" hint="Be specific — “home espresso” beats “coffee”." error={errors.niche}>
-            <TextInput
-              id="niche"
-              value={values.niche}
-              onChange={(e) => set("niche")(e.target.value)}
-              placeholder="e.g. Budget meal prep"
-              invalid={!!errors.niche}
-              maxLength={120}
-            />
-          </Field>
-          <Field id="audience" label="Target audience" hint="Who should stop scrolling?" error={errors.audience}>
-            <TextInput
-              id="audience"
-              value={values.audience}
-              onChange={(e) => set("audience")(e.target.value)}
-              placeholder="e.g. Busy university students"
-              invalid={!!errors.audience}
-              maxLength={160}
-            />
-          </Field>
-          <Segmented id="platform" label="Platform" options={PLATFORMS} labels={PLATFORM_LABELS} value={values.platform} onChange={set("platform")} error={errors.platform} />
-          <Field id="style" label="Content style" error={errors.style}>
-            <Select
-              id="style"
-              value={values.style}
-              onChange={(e) => set("style")(e.target.value)}
-              options={CONTENT_STYLES}
-              placeholder="Choose a style"
-              invalid={!!errors.style}
-            />
-          </Field>
-        </ToolForm>
+        <>
+          {profile}
+          <ToolForm onSubmit={submit} loading={loading} hasResult={!!data}>
+            <Field id="niche" label="Niche" hint="Be specific — “home espresso” beats “coffee”." error={errors.niche}>
+              <TextInput
+                id="niche"
+                value={values.niche}
+                onChange={(e) => set("niche")(e.target.value)}
+                placeholder="e.g. Budget meal prep"
+                invalid={!!errors.niche}
+                maxLength={120}
+              />
+            </Field>
+            <Field id="audience" label="Target audience" hint="Who should stop scrolling?" error={errors.audience}>
+              <TextInput
+                id="audience"
+                value={values.audience}
+                onChange={(e) => set("audience")(e.target.value)}
+                placeholder="e.g. Busy university students"
+                invalid={!!errors.audience}
+                maxLength={160}
+              />
+            </Field>
+            <Segmented id="platform" label="Platform" options={PLATFORMS} labels={PLATFORM_LABELS} value={values.platform} onChange={set("platform")} error={errors.platform} />
+            <Field id="style" label="Content style" error={errors.style}>
+              <Select
+                id="style"
+                value={values.style}
+                onChange={(e) => set("style")(e.target.value)}
+                options={CONTENT_STYLES}
+                placeholder="Choose a style"
+                invalid={!!errors.style}
+              />
+            </Field>
+          </ToolForm>
+        </>
       }
       results={
         loading ? (
@@ -130,6 +133,16 @@ function IdeasToolForm({ savedId }: { savedId: string | null }) {
                         <div className="border-l-2 border-accent pl-3">
                           <p className="text-[11px] font-medium uppercase tracking-wider text-accent-fg">Hook</p>
                           <EditableText label={`Idea ${i + 1} hook`} value={idea.hook} onChange={(v) => updateIdea(i, "hook", v)} className="text-sm italic" />
+                        </div>
+                        <div className="rounded-lg bg-surface px-3 py-2">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Message</p>
+                          <EditableText
+                            label={`Idea ${i + 1} message`}
+                            value={idea.message ?? ""}
+                            onChange={(v) => updateIdea(i, "message", v)}
+                            placeholder="What this video is trying to say"
+                            className="text-sm font-medium"
+                          />
                         </div>
                         <EditableText
                           label={`Idea ${i + 1} explanation`}

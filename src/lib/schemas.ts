@@ -74,16 +74,35 @@ export type ShotsInput = z.infer<typeof shotsInputSchema>;
 /* Model outputs (structured output schemas)                           */
 /* ------------------------------------------------------------------ */
 
-export const ideasOutputSchema = z.object({
-  ideas: z.array(
-    z.object({
-      title: z.string().describe("Short, specific video title"),
-      hook: z.string().describe("The exact first line spoken or shown in the first 2 seconds"),
-      explanation: z.string().describe("1-2 sentences on what the video covers and why it works"),
-    }),
-  ),
-});
+const ideaFields = {
+  title: z.string().describe("Short, specific video title"),
+  hook: z.string().describe("The exact first line spoken or shown in the first 2 seconds"),
+  message: z.string().describe("The core message or takeaway the viewer should leave with, in one sentence"),
+  explanation: z.string().describe("1-2 sentences on what the video covers and why it works"),
+};
+
+/** Used to generate ideas (every field required). */
+export const ideasOutputSchema = z.object({ ideas: z.array(z.object(ideaFields)) });
 export type IdeasOutput = z.infer<typeof ideasOutputSchema>;
+
+/** Used to read saved ideas: items saved before "message" existed get an empty one. */
+export const storedIdeasSchema = z.object({
+  ideas: z.array(z.object({ ...ideaFields, message: z.string().default("") })),
+});
+
+/* ------------------------------------------------------------------ */
+/* Creator profile                                                     */
+/* ------------------------------------------------------------------ */
+
+export const PROFILE_LIMITS = { bio: 600, helps: 300, message: 600 } as const;
+
+export const profileSchema = z.object({
+  bio: z.string().trim().max(PROFILE_LIMITS.bio, `Keep this under ${PROFILE_LIMITS.bio} characters.`),
+  helps: z.string().trim().max(PROFILE_LIMITS.helps, `Keep this under ${PROFILE_LIMITS.helps} characters.`),
+  message: z.string().trim().max(PROFILE_LIMITS.message, `Keep this under ${PROFILE_LIMITS.message} characters.`),
+});
+export type Profile = z.infer<typeof profileSchema>;
+export const EMPTY_PROFILE: Profile = { bio: "", helps: "", message: "" };
 
 export const scriptOutputSchema = z.object({
   title: z.string(),

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Notice } from "@/components/auth/AuthCard";
 import { UpdatePasswordForm } from "@/components/auth/forms";
 import { UserIcon } from "@/components/icons";
+import { ProfileSection, ProfileSkeleton } from "@/components/ProfileSection";
 import { Button, Card } from "@/components/ui";
 import { logOut } from "@/lib/auth-actions";
 import { initialsFor } from "@/lib/initials";
@@ -20,7 +21,7 @@ export default function AccountPage({ searchParams }: { searchParams: SearchPara
           <UserIcon className="size-[18px]" />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[28px]">Account</h1>
-        <p className="mt-1.5 text-[15px] text-muted">Manage your login details.</p>
+        <p className="mt-1.5 text-[15px] text-muted">Your creator profile and login details.</p>
       </header>
 
       <div className="space-y-5">
@@ -29,6 +30,10 @@ export default function AccountPage({ searchParams }: { searchParams: SearchPara
             <AccountDetails />
           </Suspense>
         </Card>
+
+        <Suspense fallback={<ProfileSkeleton />}>
+          <ProfileSection />
+        </Suspense>
 
         <Card className="p-5 sm:p-6">
           <h2 className="text-sm font-semibold text-foreground">Change password</h2>

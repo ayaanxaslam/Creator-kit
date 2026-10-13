@@ -3,7 +3,7 @@ import type { IdeasOutput, ScriptOutput, ShotsOutput } from "./schemas";
 type Idea = IdeasOutput["ideas"][number];
 
 export function formatIdea(idea: Idea, n?: number) {
-  return `${n ? `${n}. ` : ""}${idea.title}\nHook: ${idea.hook}\n${idea.explanation}`;
+  return `${n ? `${n}. ` : ""}${idea.title}\nHook: ${idea.hook}${idea.message ? `\nMessage: ${idea.message}` : ""}\n${idea.explanation}`;
 }
 
 export function formatIdeas(ideas: Idea[]) {

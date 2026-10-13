@@ -37,7 +37,10 @@ export async function GET(_request: Request, context: Context) {
 
   try {
     const generation = await getGeneration(id);
-    return generation ? Response.json(generation) : notFound();
+    if (!generation) return notFound();
+    // Fill in fields added since this item was saved (e.g. an idea's "message")
+    const parsed = TOOL_OUTPUT_SCHEMAS[generation.tool].safeParse(generation.output);
+    return Response.json({ ...generation, output: parsed.success ? parsed.data : generation.output });
   } catch (err) {
     return storageError(err);
   }

@@ -1,5 +1,6 @@
 import { errorResponse, generateStructured, readInput, requireUser } from "@/lib/ai";
 import { avoidList, previousVersions, trySaveGeneration } from "@/lib/generations";
+import { getProfile, profilePrompt } from "@/lib/profile";
 import { scriptInputSchema, scriptOutputSchema } from "@/lib/schemas";
 
 export const maxDuration = 120;
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
   const { topic, platform, audience, duration } = input.data;
 
   try {
-    const previous = await previousVersions("script", input.data);
+    const [previous, profile] = await Promise.all([previousVersions("script", input.data), getProfile()]);
     const result = await generateStructured(
       scriptOutputSchema,
       "video_script",
@@ -30,7 +31,7 @@ Structure:
 - ending: how the video wraps up
 - cta: one natural call to action that fits ${platform}
 
-Pace the script so it can be read aloud comfortably within ${duration} (roughly 2.5 spoken words per second). Timestamps must cover the full duration.${avoidList(
+Pace the script so it can be read aloud comfortably within ${duration} (roughly 2.5 spoken words per second). Timestamps must cover the full duration.${profilePrompt(profile)}${avoidList(
         "Earlier versions of this script are listed below. Take a clearly different angle, hook and structure — do not reuse their hooks or titles:",
         previous,
       )}`,
