@@ -118,6 +118,17 @@ export function SignupForm() {
   return (
     <form action={action} noValidate className="space-y-4">
       {state.error && <Notice tone="error">{state.error}</Notice>}
+      <Field id="name" label="Name" error={state.fieldErrors?.name}>
+        <TextInput
+          id="name"
+          autoComplete="name"
+          placeholder="Your name"
+          defaultValue={state.name}
+          invalid={!!state.fieldErrors?.name}
+          maxLength={60}
+          required
+        />
+      </Field>
       <EmailField state={state} />
       <PasswordField id="password" label="Password" autoComplete="new-password" hint="At least 8 characters." error={state.fieldErrors?.password} />
       <PasswordField id="confirm" label="Confirm password" autoComplete="new-password" error={state.fieldErrors?.confirm} />

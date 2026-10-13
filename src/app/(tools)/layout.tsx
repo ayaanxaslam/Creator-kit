@@ -1,13 +1,13 @@
 import { Suspense, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
-import { SidebarAccount } from "@/components/SidebarAccount";
+import { AppHeaderUser, HeaderUserSkeleton } from "@/components/HeaderUser";
 
 export default function ToolsLayout({ children }: { children: ReactNode }) {
   return (
     <AppShell
-      account={
-        <Suspense fallback={<div className="h-[49px] border-t border-border" />}>
-          <SidebarAccount />
+      userMenu={
+        <Suspense fallback={<HeaderUserSkeleton />}>
+          <AppHeaderUser />
         </Suspense>
       }
     >

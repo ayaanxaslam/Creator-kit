@@ -12,6 +12,7 @@ export interface AuthFormState {
   success?: string;
   fieldErrors?: Record<string, string>;
   email?: string;
+  name?: string;
 }
 
 const email = z.string().trim().min(1, "Email is required.").email("Enter a valid email address.").max(254);
@@ -86,11 +87,22 @@ export async function logIn(_prev: AuthFormState, formData: FormData): Promise<A
 
 export async function signUp(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const parsed = z
-    .object({ email, password: newPassword, confirm: z.string() })
+    .object({
+      name: z.string().trim().min(1, "Name is required.").max(60, "Name must be 60 characters or fewer."),
+      email,
+      password: newPassword,
+      confirm: z.string(),
+    })
     .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "Passwords don't match." })
-    .safeParse({ email: formData.get("email"), password: formData.get("password"), confirm: formData.get("confirm") });
+    .safeParse({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+      confirm: formData.get("confirm"),
+    });
   const typedEmail = String(formData.get("email") ?? "");
-  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email: typedEmail };
+  const typedName = String(formData.get("name") ?? "");
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email: typedEmail, name: typedName };
 
   const supabase = await createClient();
   if (!supabase) return { error: AUTH_NOT_CONFIGURED, email: typedEmail };
@@ -98,9 +110,12 @@ export async function signUp(_prev: AuthFormState, formData: FormData): Promise<
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { emailRedirectTo: `${await siteOrigin()}/auth/confirm?next=${encodeURIComponent(DEFAULT_AFTER_LOGIN)}` },
+    options: {
+      data: { full_name: parsed.data.name },
+      emailRedirectTo: `${await siteOrigin()}/auth/confirm?next=${encodeURIComponent(DEFAULT_AFTER_LOGIN)}`,
+    },
   });
-  if (error) return { error: authMessage(error), email: typedEmail };
+  if (error) return { error: authMessage(error), email: typedEmail, name: typedName };
 
   // Email confirmation turned off in Supabase: the user is signed in straight away.
   if (data.session) redirect(DEFAULT_AFTER_LOGIN);

@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { LandingHeaderActions, LandingHeroActions, LandingHeroNote } from "@/components/HeaderUser";
 import { ArrowRightIcon } from "@/components/icons";
 import { Logo } from "@/components/Logo";
-import { buttonClass } from "@/components/ui";
 import { TOOLS } from "@/lib/tools";
 
 const STEPS = [
@@ -26,12 +27,9 @@ export default function Home() {
                 {t.short}
               </Link>
             ))}
-            <Link href="/login" className={buttonClass("ghost", "h-9 px-3")}>
-              Log in
-            </Link>
-            <Link href="/signup" className={buttonClass("primary", "h-9 px-3.5")}>
-              Sign up
-            </Link>
+            <Suspense fallback={<div className="h-9 w-[150px]" aria-hidden="true" />}>
+              <LandingHeaderActions />
+            </Suspense>
           </nav>
         </div>
       </header>
@@ -57,15 +55,13 @@ export default function Home() {
               CreatorKit turns your niche into video ideas, scripts and shot lists — specific to your audience and ready to film.
             </p>
             <div className="mt-9 flex animate-fade-up flex-col items-center justify-center gap-3 [animation-delay:180ms] sm:flex-row">
-              <Link href="/signup" className={buttonClass("primary", "group h-11 w-full px-5 sm:w-auto")}>
-                Create your account
-                <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link href="/login" className={buttonClass("secondary", "h-11 w-full px-5 sm:w-auto")}>
-                Log in
-              </Link>
+              <Suspense fallback={<div className="h-11 w-full sm:w-[290px]" aria-hidden="true" />}>
+                <LandingHeroActions />
+              </Suspense>
             </div>
-            <p className="mt-4 text-xs text-muted">All you need is an email and a password.</p>
+            <Suspense>
+              <LandingHeroNote />
+            </Suspense>
           </div>
         </section>
 

@@ -28,11 +28,16 @@ export async function createClient() {
   });
 }
 
-/** The signed-in user's id and email, or null. Deduplicated within a request. */
+/** The signed-in user's id, email and name, or null. Deduplicated within a request. */
 export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   if (!supabase) return null;
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) return null;
-  return { id: data.claims.sub, email: (data.claims.email as string | undefined) ?? "" };
+  const metadata = (data.claims.user_metadata ?? {}) as { full_name?: unknown };
+  return {
+    id: data.claims.sub,
+    email: (data.claims.email as string | undefined) ?? "",
+    name: typeof metadata.full_name === "string" ? metadata.full_name : "",
+  };
 });

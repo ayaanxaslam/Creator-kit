@@ -5,6 +5,7 @@ import { UpdatePasswordForm } from "@/components/auth/forms";
 import { UserIcon } from "@/components/icons";
 import { Button, Card } from "@/components/ui";
 import { logOut } from "@/lib/auth-actions";
+import { initialsFor } from "@/lib/initials";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Account" };
@@ -24,9 +25,8 @@ export default function AccountPage({ searchParams }: { searchParams: SearchPara
 
       <div className="space-y-5">
         <Card className="p-5 sm:p-6">
-          <h2 className="text-sm font-semibold text-foreground">Email</h2>
-          <Suspense fallback={<p className="mt-1 h-5 w-48 animate-shimmer rounded bg-surface-2" />}>
-            <AccountEmail />
+          <Suspense fallback={<div className="h-12 w-60 animate-shimmer rounded bg-surface-2" />}>
+            <AccountDetails />
           </Suspense>
         </Card>
 
@@ -55,9 +55,20 @@ export default function AccountPage({ searchParams }: { searchParams: SearchPara
   );
 }
 
-async function AccountEmail() {
+async function AccountDetails() {
   const user = await getCurrentUser();
-  return <p className="mt-1 break-all text-sm text-muted">{user?.email}</p>;
+  if (!user) return null;
+  return (
+    <div className="flex items-center gap-4">
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-inverse text-base font-semibold text-inverse-fg">
+        {initialsFor(user.name, user.email)}
+      </span>
+      <div className="min-w-0">
+        {user.name && <p className="truncate text-sm font-semibold text-foreground">{user.name}</p>}
+        <p className="break-all text-sm text-muted">{user.email}</p>
+      </div>
+    </div>
+  );
 }
 
 async function ResetNotice({ searchParams }: { searchParams: SearchParams }) {
