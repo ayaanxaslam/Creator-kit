@@ -30,7 +30,7 @@ export const AUTH_NOT_CONFIGURED =
   "Login isn't configured yet. Set SUPABASE_URL and SUPABASE_ANON_KEY in your environment variables and redeploy.";
 
 /** Pages that require a signed-in user. */
-export const PROTECTED_PATHS = ["/ideas", "/script", "/shots", "/account"];
+export const PROTECTED_PATHS = ["/ideas", "/script", "/shots", "/saved", "/account"];
 
 /** Pages only meant for signed-out users. */
 export const AUTH_PATHS = ["/login", "/signup", "/forgot-password"];

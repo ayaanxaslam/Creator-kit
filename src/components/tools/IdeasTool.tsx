@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { CopyButton } from "@/components/CopyButton";
 import { ArrowRightIcon, LightbulbIcon } from "@/components/icons";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
@@ -15,11 +16,26 @@ import { validate } from "@/lib/validate";
 
 const LOADING = ["Studying your niche…", "Thinking like your audience…", "Writing scroll-stopping hooks…", "Polishing 10 ideas…"];
 
+/** Keyed on the query string so opening a saved item (?id=) always starts fresh. */
 export function IdeasTool() {
+  const params = useSearchParams();
+  return <IdeasToolForm key={params.toString()} savedId={params.get("id")} />;
+}
+
+function IdeasToolForm({ savedId }: { savedId: string | null }) {
   const [values, setValues] = useState({ niche: "", audience: "", platform: "TikTok", style: "" });
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [lastInput, setLastInput] = useState<IdeasInput | null>(null);
-  const { status, data, setData, error, fieldErrors, generate } = useGenerate<IdeasInput, IdeasOutput>("/api/ideas");
+  const { status, data, edit, error, fieldErrors, generate, load, saveState } = useGenerate<IdeasInput, IdeasOutput>("/api/ideas");
+
+  useEffect(() => {
+    if (!savedId) return;
+    load(savedId).then((input) => {
+      if (!input) return;
+      setValues(input);
+      setLastInput(input);
+    });
+  }, [savedId, load]);
 
   const errors = { ...fieldErrors, ...clientErrors };
   const loading = status === "loading";
@@ -38,7 +54,7 @@ export function IdeasTool() {
   }
 
   function updateIdea(i: number, key: keyof IdeasOutput["ideas"][number], v: string) {
-    setData((d) => d && { ideas: d.ideas.map((idea, n) => (n === i ? { ...idea, [key]: v } : idea)) });
+    edit((d) => ({ ideas: d.ideas.map((idea, n) => (n === i ? { ...idea, [key]: v } : idea)) }));
   }
 
   return (
@@ -93,6 +109,7 @@ export function IdeasTool() {
               meta={lastInput ? `${lastInput.niche} · ${lastInput.platform} · ${lastInput.style}` : undefined}
               onRegenerate={() => lastInput && generate(lastInput)}
               loading={loading}
+              saveState={saveState}
               actions={<CopyButton label="Copy all" getText={() => formatIdeas(data.ideas)} />}
             />
             <ol className="space-y-3">

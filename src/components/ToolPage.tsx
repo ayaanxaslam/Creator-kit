@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, type FormEvent, type ReactNode } from "react";
-import { RefreshIcon, SparkleIcon } from "./icons";
+import Link from "next/link";
+import type { SaveState } from "@/hooks/useGenerate";
+import { CheckIcon, RefreshIcon, SparkleIcon } from "./icons";
 import { Button, Card, Spinner } from "./ui";
 
 export function ToolPage({
@@ -84,30 +86,60 @@ export function ToolForm({
   );
 }
 
+/** Small "Saved to your account" indicator for a result. */
+export function SaveIndicator({ state }: { state: SaveState }) {
+  if (state === "none") return null;
+  const content = {
+    saved: (
+      <>
+        <CheckIcon className="size-3 text-accent" /> Saved to your account
+      </>
+    ),
+    saving: <>Saving…</>,
+    error: <span className="text-danger">Couldn&apos;t save changes — check your connection</span>,
+    not_set_up: <span>Not saved: saving isn&apos;t set up yet</span>,
+  }[state];
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-muted" aria-live="polite">
+      {content}
+      {state === "saved" && (
+        <Link href="/saved" className="ml-1 font-medium text-foreground underline-offset-4 hover:underline">
+          View saved
+        </Link>
+      )}
+    </span>
+  );
+}
+
 export function ResultsToolbar({
   title,
   meta,
   onRegenerate,
   loading,
   actions,
+  saveState = "none",
 }: {
   title: string;
   meta?: string;
-  onRegenerate: () => void;
+  onRegenerate?: () => void;
   loading: boolean;
   actions?: ReactNode;
+  saveState?: SaveState;
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <div className="min-w-0">
+      <div className="min-w-0 space-y-0.5">
         <h2 className="truncate text-base font-semibold text-foreground">{title}</h2>
         {meta && <p className="text-xs text-muted">{meta}</p>}
+        <SaveIndicator state={saveState} />
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="secondary" className="h-8 px-2.5 text-xs" onClick={onRegenerate} disabled={loading}>
-          <RefreshIcon className={loading ? "size-3.5 animate-spin" : "size-3.5"} />
-          Regenerate
-        </Button>
+        {onRegenerate && (
+          <Button variant="secondary" className="h-8 px-2.5 text-xs" onClick={onRegenerate} disabled={loading}>
+            <RefreshIcon className={loading ? "size-3.5 animate-spin" : "size-3.5"} />
+            Regenerate
+          </Button>
+        )}
         {actions}
       </div>
     </div>

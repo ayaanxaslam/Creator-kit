@@ -38,7 +38,11 @@ In the Supabase dashboard, go to **Authentication → URL Configuration**:
 
 Email/password sign-in is enabled by default. If “Confirm email” is on (the default), new users must click the link in their confirmation email before logging in. Supabase's built-in email sender is heavily rate-limited (a few emails per hour); for real users, add your own SMTP provider under **Authentication → Emails → SMTP Settings**.
 
-No database tables are needed — accounts live in Supabase Auth.
+### Database (saved items)
+
+Every idea list, script and shot list a user generates is saved to their account (including their edits) and listed on the **Saved** page. New idea batches avoid repeating ideas the user already has, and regenerating a script or shot list takes a different angle from earlier versions.
+
+This needs one table. In the Supabase dashboard open **SQL Editor → New query**, paste the contents of [`supabase/migrations/20261013000000_create_generations.sql`](supabase/migrations/20261013000000_create_generations.sql) and click **Run**. It creates the `generations` table with Row Level Security so each user can only read and change their own rows. Until it's run, the app still works but shows “Not saved: saving isn't set up yet”.
 
 Then run:
 
@@ -60,6 +64,7 @@ Without a key the app still runs, but generation returns a clear “not configur
 - `src/app/api/{ideas,script,shots}/route.ts` — server-side route handlers. They validate input with Zod, call the OpenAI Responses API with structured outputs, and return schema-validated JSON. The API key is only read on the server (`src/lib/ai.ts` is marked `server-only`).
 - `src/lib/schemas.ts` — shared input/output schemas. The same input schemas validate forms in the browser and requests on the server.
 - `src/proxy.ts` refreshes the Supabase session on each request and redirects signed-out users from the tools to `/login`. Auth runs entirely on the server via server actions (`src/lib/auth-actions.ts`); email links land on `src/app/auth/confirm/route.ts`.
+- `src/lib/generations.ts` reads and writes saved items through Supabase with the user's own session, so Row Level Security enforces per-user access. `src/app/api/generations/[id]/route.ts` loads, auto-saves edits to, and deletes an item.
 - Errors (missing/invalid key, unavailable model, rate limits or no credits, timeouts, refusals) are mapped to friendly messages; details are logged server-side only.
 
 ## Scripts

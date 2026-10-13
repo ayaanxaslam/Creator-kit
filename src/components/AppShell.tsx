@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { TOOLS } from "@/lib/tools";
-import { HomeIcon } from "./icons";
+import { BookmarkIcon, HomeIcon } from "./icons";
 import { Logo } from "./Logo";
 import { cn } from "./ui";
 
@@ -40,6 +40,21 @@ export function AppShell({ children, userMenu }: { children: ReactNode; userMenu
               </Link>
             );
           })}
+          <p className="px-2.5 pb-2 pt-6 text-[11px] font-medium uppercase tracking-wider text-muted">Library</p>
+          <Link
+            href="/saved"
+            aria-current={pathname === "/saved" ? "page" : undefined}
+            className={cn(
+              "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+              pathname === "/saved"
+                ? "bg-background font-medium text-foreground shadow-sm ring-1 ring-border"
+                : "text-muted hover:bg-surface-2 hover:text-foreground",
+            )}
+          >
+            <BookmarkIcon className={cn("size-4 transition-colors", pathname === "/saved" ? "text-accent" : "text-muted group-hover:text-foreground")} />
+            Saved
+          </Link>
         </nav>
         <div className="mt-auto rounded-lg border border-border bg-background p-3 text-xs leading-relaxed text-muted">
           <span className="font-medium text-foreground">Tip:</span> every result is editable — click any text to tweak it before copying.
@@ -60,9 +75,9 @@ export function AppShell({ children, userMenu }: { children: ReactNode; userMenu
         {/* Mobile bottom navigation */}
         <nav
           aria-label="Tools"
-          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
         >
-          {[{ href: "/", short: "Home", Icon: HomeIcon }, ...TOOLS].map(({ href, short, Icon }) => {
+          {[{ href: "/", short: "Home", Icon: HomeIcon }, ...TOOLS, { href: "/saved", short: "Saved", Icon: BookmarkIcon }].map(({ href, short, Icon }) => {
             const active = pathname === href;
             return (
               <Link

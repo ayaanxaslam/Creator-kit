@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { CopyButton } from "@/components/CopyButton";
 import { EditableText } from "@/components/EditableText";
 import { ArrowRightIcon, ScriptIcon } from "@/components/icons";
@@ -36,7 +36,17 @@ function ScriptToolForm({ params }: { params: ReadonlyURLSearchParams }) {
   });
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [lastInput, setLastInput] = useState<ScriptInput | null>(null);
-  const { status, data, setData, error, fieldErrors, generate } = useGenerate<ScriptInput, ScriptOutput>("/api/script");
+  const { status, data, edit, error, fieldErrors, generate, load, saveState } = useGenerate<ScriptInput, ScriptOutput>("/api/script");
+
+  const savedId = params.get("id");
+  useEffect(() => {
+    if (!savedId) return;
+    load(savedId).then((input) => {
+      if (!input) return;
+      setValues(input);
+      setLastInput(input);
+    });
+  }, [savedId, load]);
 
   const errors = { ...fieldErrors, ...clientErrors };
   const loading = status === "loading";
@@ -54,7 +64,7 @@ function ScriptToolForm({ params }: { params: ReadonlyURLSearchParams }) {
     generate(input);
   }
 
-  const patch = (fn: (s: ScriptOutput) => ScriptOutput) => setData((d) => d && fn(d));
+  const patch = edit;
   const updateHook = (key: keyof ScriptOutput["hook"], v: string) => patch((s) => ({ ...s, hook: { ...s.hook, [key]: v } }));
   const updateBeat = (i: number, key: keyof ScriptOutput["beats"][number], v: string) =>
     patch((s) => ({ ...s, beats: s.beats.map((b, n) => (n === i ? { ...b, [key]: v } : b)) }));
@@ -105,6 +115,7 @@ function ScriptToolForm({ params }: { params: ReadonlyURLSearchParams }) {
               meta={lastInput ? `${lastInput.platform} · ${lastInput.duration}` : undefined}
               onRegenerate={() => lastInput && generate(lastInput)}
               loading={loading}
+              saveState={saveState}
               actions={
                 <>
                   <CopyButton label="Voiceover" getText={() => formatVoiceover(data)} className="hidden sm:inline-flex" />

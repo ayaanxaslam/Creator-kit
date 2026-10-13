@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CopyButton } from "@/components/CopyButton";
 import { EditableText } from "@/components/EditableText";
 import { CameraIcon } from "@/components/icons";
@@ -32,7 +32,17 @@ function ShotsToolForm({ params }: { params: ReadonlyURLSearchParams }) {
   });
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [lastInput, setLastInput] = useState<ShotsInput | null>(null);
-  const { status, data, setData, error, fieldErrors, generate } = useGenerate<ShotsInput, ShotsOutput>("/api/shots");
+  const { status, data, edit, error, fieldErrors, generate, load, saveState } = useGenerate<ShotsInput, ShotsOutput>("/api/shots");
+
+  const savedId = params.get("id");
+  useEffect(() => {
+    if (!savedId) return;
+    load(savedId).then((input) => {
+      if (!input) return;
+      setValues(input);
+      setLastInput(input);
+    });
+  }, [savedId, load]);
 
   const errors = { ...fieldErrors, ...clientErrors };
   const loading = status === "loading";
@@ -51,8 +61,8 @@ function ShotsToolForm({ params }: { params: ReadonlyURLSearchParams }) {
   }
 
   const updateShot = (i: number, key: keyof Shot, v: string) =>
-    setData((d) => d && { ...d, shots: d.shots.map((s, n) => (n === i ? { ...s, [key]: v } : s)) });
-  const updateTip = (i: number, v: string) => setData((d) => d && { ...d, tips: d.tips.map((t, n) => (n === i ? v : t)) });
+    edit((d) => ({ ...d, shots: d.shots.map((s, n) => (n === i ? { ...s, [key]: v } : s)) }));
+  const updateTip = (i: number, v: string) => edit((d) => ({ ...d, tips: d.tips.map((t, n) => (n === i ? v : t)) }));
 
   return (
     <ToolPage
@@ -91,6 +101,7 @@ function ShotsToolForm({ params }: { params: ReadonlyURLSearchParams }) {
               meta={`${data.shots.length} shots${lastInput ? ` · ${lastInput.format} · ${lastInput.duration}` : ""}`}
               onRegenerate={() => lastInput && generate(lastInput)}
               loading={loading}
+              saveState={saveState}
               actions={<CopyButton label="Copy shot list" getText={() => formatShots(data)} />}
             />
             <ol className="space-y-3">
