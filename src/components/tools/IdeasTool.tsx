@@ -2,31 +2,45 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { CopyButton } from "@/components/CopyButton";
+import { ProfileCard, ProfileSkeleton } from "@/components/ProfileCard";
 import { ArrowRightIcon, LightbulbIcon } from "@/components/icons";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ResultsToolbar, ToolForm, ToolPage } from "@/components/ToolPage";
 import { Card, Field, Segmented, Select, TextInput } from "@/components/ui";
 import { EditableText } from "@/components/EditableText";
 import { NON_RETRYABLE, useGenerate } from "@/hooks/useGenerate";
+import { usePrefill } from "@/hooks/usePrefill";
 import { formatIdea, formatIdeas } from "@/lib/format";
 import { CONTENT_STYLES, PLATFORMS, PLATFORM_LABELS, ideasInputSchema, type IdeasInput, type IdeasOutput } from "@/lib/schemas";
+import { getCurrentProfile } from "@/lib/profile-store";
 import { validate } from "@/lib/validate";
 
 const LOADING = ["Studying your niche…", "Thinking like your audience…", "Writing scroll-stopping hooks…", "Polishing 10 ideas…"];
 
 /** Keyed on the query string so opening a saved item (?id=) always starts fresh. */
-export function IdeasTool({ profile }: { profile?: ReactNode }) {
+export function IdeasTool() {
   const params = useSearchParams();
-  return <IdeasToolForm key={params.toString()} savedId={params.get("id")} profile={profile} />;
+  return <IdeasToolForm key={params.toString()} savedId={params.get("id")} />;
 }
 
-function IdeasToolForm({ savedId, profile }: { savedId: string | null; profile?: ReactNode }) {
-  const [values, setValues] = useState({ niche: "", audience: "", platform: "TikTok", style: "" });
+function IdeasToolForm({ savedId }: { savedId: string | null }) {
+  const [initialValues] = useState({ niche: "", audience: "", platform: "TikTok", style: "" });
+  const [values, setValues] = useState(initialValues);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [lastInput, setLastInput] = useState<IdeasInput | null>(null);
   const { status, data, edit, error, fieldErrors, generate, load, saveState } = useGenerate<IdeasInput, IdeasOutput>("/api/ideas");
+
+  // Fill in what they used last time (and who they help) so they don't retype it
+  const { profile } = usePrefill({
+    tool: "ideas",
+    fillForm: !savedId,
+    fields: ["niche", "audience", "platform", "style"],
+    defaults: initialValues,
+    setValues,
+    audienceMax: 160,
+  });
 
   useEffect(() => {
     if (!savedId) return;
@@ -50,7 +64,13 @@ function IdeasToolForm({ savedId, profile }: { savedId: string | null; profile?:
     setClientErrors(errors);
     if (!input) return;
     setLastInput(input);
-    generate(input);
+    run(input);
+  }
+
+  /** Generate with the creator profile exactly as it is on screen. */
+  function run(input: IdeasInput) {
+    const profile = getCurrentProfile();
+    generate(input, profile ? { profile } : undefined);
   }
 
   function updateIdea(i: number, key: keyof IdeasOutput["ideas"][number], v: string) {
@@ -64,7 +84,7 @@ function IdeasToolForm({ savedId, profile }: { savedId: string | null; profile?:
       description="Tell us who you create for. Get 10 specific ideas, each with a title, an opening hook and why it works."
       form={
         <>
-          {profile}
+          {profile ? <ProfileCard initial={profile} collapsible /> : <ProfileSkeleton />}
           <ToolForm onSubmit={submit} loading={loading} hasResult={!!data}>
             <Field id="niche" label="Niche" hint="Be specific — “home espresso” beats “coffee”." error={errors.niche}>
               <TextInput
@@ -104,13 +124,13 @@ function IdeasToolForm({ savedId, profile }: { savedId: string | null; profile?:
         loading ? (
           <LoadingState messages={LOADING} rows={5} />
         ) : status === "error" && error ? (
-          <ErrorState message={error.message} onRetry={() => lastInput && generate(lastInput)} retryable={!NON_RETRYABLE.includes(error.code ?? "")} />
+          <ErrorState message={error.message} onRetry={() => lastInput && run(lastInput)} retryable={!NON_RETRYABLE.includes(error.code ?? "")} />
         ) : data ? (
           <div className="animate-fade-up">
             <ResultsToolbar
               title={`${data.ideas.length} video ideas`}
               meta={lastInput ? `${lastInput.niche} · ${lastInput.platform} · ${lastInput.style}` : undefined}
-              onRegenerate={() => lastInput && generate(lastInput)}
+              onRegenerate={() => lastInput && run(lastInput)}
               loading={loading}
               saveState={saveState}
               actions={<CopyButton label="Copy all" getText={() => formatIdeas(data.ideas)} />}

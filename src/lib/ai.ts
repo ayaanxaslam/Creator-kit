@@ -123,7 +123,11 @@ export function errorResponse(err: unknown) {
 }
 
 /** Parse a JSON body against a schema, returning field errors on failure. */
-export async function readInput<T extends z.ZodType>(request: Request, schema: T) {
+export async function readInput<T extends z.ZodType>(
+  request: Request,
+  schema: T,
+  pickExtra?: (body: Record<string, unknown> | null) => unknown,
+) {
   let body: unknown;
   try {
     body = await request.json();
@@ -144,5 +148,8 @@ export async function readInput<T extends z.ZodType>(request: Request, schema: T
       ),
     };
   }
-  return { data: result.data as z.infer<T> };
+  return {
+    data: result.data as z.infer<T>,
+    extra: pickExtra?.(body && typeof body === "object" ? (body as Record<string, unknown>) : null),
+  };
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { profileSchema, type Profile } from "./schemas";
+import { persistProfile } from "./profile";
 import { createClient } from "./supabase/server";
 
 export type SaveProfileResult = { ok: true } | { ok: false; error: string; fieldErrors?: Partial<Record<keyof Profile, string>> };
@@ -20,10 +21,6 @@ export async function saveProfile(profile: Profile): Promise<SaveProfileResult> 
   const { data: claims } = await supabase.auth.getClaims();
   if (!claims?.claims) return { ok: false, error: "Your session has expired. Please log in again." };
 
-  const { error } = await supabase.auth.updateUser({ data: { creator_profile: parsed.data } });
-  if (error) {
-    console.error("[CreatorKit] couldn't save profile:", error.code, error.message);
-    return { ok: false, error: "Couldn't save right now. Please try again." };
-  }
+  if (!(await persistProfile(parsed.data))) return { ok: false, error: "Couldn't save right now. Please try again." };
   return { ok: true };
 }

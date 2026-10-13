@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { saveProfile } from "@/lib/profile-actions";
+import { setCurrentProfile } from "@/lib/profile-store";
 import { PROFILE_LIMITS, type Profile } from "@/lib/schemas";
 import { CheckIcon, UserIcon } from "./icons";
 import { Card, Field, TextArea, cn } from "./ui";
@@ -47,6 +48,11 @@ export function ProfileCard({ initial, collapsible = false }: { initial: Profile
   const filled = FIELDS.filter((f) => initial[f.key].trim()).length;
   const [open, setOpen] = useState(!collapsible || filled === 0);
   const dirty = useRef(false);
+
+  // Share what's on screen with the generator, even before auto-save finishes
+  useEffect(() => {
+    setCurrentProfile(profile);
+  }, [profile]);
 
   useEffect(() => {
     if (!dirty.current) return;
@@ -159,4 +165,8 @@ export function ProfileCard({ initial, collapsible = false }: { initial: Profile
       {!open && saveState !== "idle" && <div className="border-t border-border px-5 py-2 sm:px-6">{status}</div>}
     </Card>
   );
+}
+
+export function ProfileSkeleton() {
+  return <div className="h-[72px] animate-shimmer rounded-xl border border-border bg-surface" aria-hidden="true" />;
 }

@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ResultsToolbar, ToolForm, ToolPage } from "@/components/ToolPage";
 import { Badge, Card, Field, Segmented, Select, TextArea, TextInput, buttonClass } from "@/components/ui";
 import { NON_RETRYABLE, useGenerate } from "@/hooks/useGenerate";
+import { usePrefill } from "@/hooks/usePrefill";
 import { formatScript, formatVoiceover } from "@/lib/format";
 import { DURATIONS, PLATFORMS, PLATFORM_LABELS, scriptInputSchema, type ScriptInput, type ScriptOutput } from "@/lib/schemas";
 import { validate } from "@/lib/validate";
@@ -28,17 +29,30 @@ export function ScriptTool() {
 
 function ScriptToolForm({ params }: { params: ReadonlyURLSearchParams }) {
   const initialPlatform = params.get("platform") ?? "";
-  const [values, setValues] = useState({
+  const [initialValues] = useState(() => ({
     topic: params.get("topic") ?? "",
     platform: (PLATFORMS as readonly string[]).includes(initialPlatform) ? initialPlatform : "TikTok",
     audience: params.get("audience") ?? "",
     duration: "30 seconds",
-  });
+  }));
+  const [values, setValues] = useState(initialValues);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [lastInput, setLastInput] = useState<ScriptInput | null>(null);
   const { status, data, edit, error, fieldErrors, generate, load, saveState } = useGenerate<ScriptInput, ScriptOutput>("/api/script");
 
   const savedId = params.get("id");
+
+  // Fill in the platform, audience and length they used last time (not when
+  // opening a saved script or coming from an idea, which bring their own values)
+  usePrefill({
+    tool: "script",
+    fillForm: !savedId && !params.get("topic"),
+    fields: ["platform", "audience", "duration"],
+    defaults: initialValues,
+    setValues,
+    audienceMax: 160,
+  });
+
   useEffect(() => {
     if (!savedId) return;
     load(savedId).then((input) => {

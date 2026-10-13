@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ResultsToolbar, ToolForm, ToolPage } from "@/components/ToolPage";
 import { Card, Field, Select, TextArea } from "@/components/ui";
 import { NON_RETRYABLE, useGenerate } from "@/hooks/useGenerate";
+import { usePrefill } from "@/hooks/usePrefill";
 import { formatShots } from "@/lib/format";
 import { DURATIONS, FORMATS, shotsInputSchema, type ShotsInput, type ShotsOutput } from "@/lib/schemas";
 import { validate } from "@/lib/validate";
@@ -25,16 +26,27 @@ export function ShotsTool() {
 
 function ShotsToolForm({ params }: { params: ReadonlyURLSearchParams }) {
   const initialDuration = params.get("duration") ?? "";
-  const [values, setValues] = useState({
+  const [initialValues] = useState(() => ({
     idea: params.get("idea") ?? "",
     format: "",
     duration: (DURATIONS as readonly string[]).includes(initialDuration) ? initialDuration : "30 seconds",
-  });
+  }));
+  const [values, setValues] = useState(initialValues);
   const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
   const [lastInput, setLastInput] = useState<ShotsInput | null>(null);
   const { status, data, edit, error, fieldErrors, generate, load, saveState } = useGenerate<ShotsInput, ShotsOutput>("/api/shots");
 
   const savedId = params.get("id");
+
+  // Fill in the format and length they used last time
+  usePrefill({
+    tool: "shots",
+    fillForm: !savedId && !params.get("idea"),
+    fields: ["format", "duration"],
+    defaults: initialValues,
+    setValues,
+  });
+
   useEffect(() => {
     if (!savedId) return;
     load(savedId).then((input) => {

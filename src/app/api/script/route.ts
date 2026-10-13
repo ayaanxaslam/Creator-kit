@@ -1,6 +1,6 @@
 import { errorResponse, generateStructured, readInput, requireUser } from "@/lib/ai";
 import { avoidList, previousVersions, trySaveGeneration } from "@/lib/generations";
-import { getProfile, profilePrompt } from "@/lib/profile";
+import { getProfile, withProfile } from "@/lib/profile";
 import { scriptInputSchema, scriptOutputSchema } from "@/lib/schemas";
 
 export const maxDuration = 120;
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const result = await generateStructured(
       scriptOutputSchema,
       "video_script",
-      `Write a complete short-form video script.
+      withProfile("script", profile, `Write a complete short-form video script.
 
 Topic: ${topic}
 Platform: ${platform}
@@ -31,10 +31,10 @@ Structure:
 - ending: how the video wraps up
 - cta: one natural call to action that fits ${platform}
 
-Pace the script so it can be read aloud comfortably within ${duration} (roughly 2.5 spoken words per second). Timestamps must cover the full duration.${profilePrompt(profile)}${avoidList(
+Pace the script so it can be read aloud comfortably within ${duration} (roughly 2.5 spoken words per second). Timestamps must cover the full duration.${avoidList(
         "Earlier versions of this script are listed below. Take a clearly different angle, hook and structure — do not reuse their hooks or titles:",
         previous,
-      )}`,
+      )}`),
     );
     const saved = await trySaveGeneration("script", input.data, result);
     return Response.json({ ...result, ...saved });

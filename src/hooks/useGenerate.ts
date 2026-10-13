@@ -40,7 +40,8 @@ export function useGenerate<TInput, TOutput extends object>(endpoint: string) {
   const dirty = useRef(false);
 
   const generate = useCallback(
-    async (input: TInput) => {
+    /** `extra` is sent alongside the input (e.g. the on-screen creator profile). */
+    async (input: TInput, extra?: Record<string, unknown>) => {
       controller.current?.abort();
       const ac = new AbortController();
       controller.current = ac;
@@ -53,7 +54,7 @@ export function useGenerate<TInput, TOutput extends object>(endpoint: string) {
         const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(input),
+          body: JSON.stringify({ ...input, ...extra }),
           signal: ac.signal,
         });
         const json = (await res.json().catch(() => ({}))) as TOutput & ApiError & SaveMeta;

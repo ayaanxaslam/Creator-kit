@@ -176,3 +176,21 @@ export function avoidList(heading: string, items: string[]) {
   if (items.length === 0) return "";
   return `\n\n${heading}\n${items.map((i) => `- ${i}`).join("\n")}`;
 }
+
+/** The form input the user last generated with for a tool, or null. */
+export async function lastInput(tool: Tool): Promise<Record<string, string> | null> {
+  try {
+    const supabase = await db();
+    const { data, error } = await supabase
+      .from("generations")
+      .select("input")
+      .eq("tool", tool)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) fail(error);
+    return (data?.input as Record<string, string> | undefined) ?? null;
+  } catch {
+    return null;
+  }
+}
