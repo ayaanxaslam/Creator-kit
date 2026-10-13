@@ -11,6 +11,7 @@ export async function POST(request: Request) {
   try {
     const result = await generateStructured(
       ideasOutputSchema,
+      "video_ideas",
       `Generate exactly 10 distinct short-form video ideas.
 
 Niche: ${niche}

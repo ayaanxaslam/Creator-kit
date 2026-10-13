@@ -11,6 +11,7 @@ export async function POST(request: Request) {
   try {
     const result = await generateStructured(
       scriptOutputSchema,
+      "video_script",
       `Write a complete short-form video script.
 
 Topic: ${topic}

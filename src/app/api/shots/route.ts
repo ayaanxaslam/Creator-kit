@@ -11,6 +11,7 @@ export async function POST(request: Request) {
   try {
     const result = await generateStructured(
       shotsOutputSchema,
+      "shot_list",
       `Create a practical shot list for a short-form vertical video.
 
 Video idea: ${idea}

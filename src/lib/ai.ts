@@ -1,10 +1,14 @@
 import "server-only";
 
-import Anthropic from "@anthropic-ai/sdk";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import OpenAI from "openai";
+import { zodTextFormat } from "openai/helpers/zod";
 import type { z } from "zod";
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
+const MODEL = process.env.OPENAI_MODEL || "gpt-5.4-mini";
+
+// Reasoning models (GPT-5 family and later, o-series) accept a reasoning effort.
+// "low" keeps generation fast; older non-reasoning models reject the parameter.
+const SUPPORTS_REASONING = /^(gpt-[5-9]|o\d)/.test(MODEL);
 
 export class GenerationError extends Error {
   constructor(
@@ -16,17 +20,17 @@ export class GenerationError extends Error {
   }
 }
 
-let client: Anthropic | null = null;
+let client: OpenAI | null = null;
 
 function getClient() {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENAI_API_KEY) {
     throw new GenerationError(
-      "AI generation isn't configured yet. Set ANTHROPIC_API_KEY (in .env.local locally, or in your Vercel project's environment variables) and redeploy.",
+      "AI generation isn't configured yet. Set OPENAI_API_KEY (in .env.local locally, or in your Vercel project's environment variables) and redeploy.",
       503,
       "not_configured",
     );
   }
-  client ??= new Anthropic({ timeout: 120_000, maxRetries: 2 });
+  client ??= new OpenAI({ timeout: 120_000, maxRetries: 2 });
   return client;
 }
 
@@ -36,31 +40,28 @@ Everything you produce must be specific to the creator's niche, audience and pla
 Write hooks the way people actually talk. Avoid clichés like "In today's video" or "Hey guys". Do not use emojis or hashtags unless asked.`;
 
 /** Run one structured generation and return the parsed, schema-validated result. */
-export async function generateStructured<T extends z.ZodType>(schema: T, prompt: string): Promise<z.infer<T>> {
-  const anthropic = getClient();
+export async function generateStructured<T extends z.ZodType>(schema: T, name: string, prompt: string): Promise<z.infer<T>> {
+  const openai = getClient();
 
-  const response = await anthropic.beta.messages.parse({
+  const response = await openai.responses.parse({
     model: MODEL,
-    max_tokens: 16000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-    thinking: { type: "adaptive" },
-    output_config: { effort: "low", format: betaZodOutputFormat(schema) },
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: prompt }],
+    instructions: SYSTEM_PROMPT,
+    input: prompt,
+    max_output_tokens: 16000,
+    ...(SUPPORTS_REASONING && { reasoning: { effort: "low" as const } }),
+    text: { format: zodTextFormat(schema, name) },
   });
 
-  if (response.stop_reason === "refusal") {
-    throw new GenerationError(
-      "The AI declined this request. Try rephrasing your inputs.",
-      422,
-      "refusal",
-    );
+  const refused = response.output.some(
+    (item) => item.type === "message" && item.content.some((part) => part.type === "refusal"),
+  );
+  if (refused || response.incomplete_details?.reason === "content_filter") {
+    throw new GenerationError("The AI declined this request. Try rephrasing your inputs.", 422, "refusal");
   }
-  if (response.stop_reason === "max_tokens" || !response.parsed_output) {
+  if (response.status === "incomplete" || !response.output_parsed) {
     throw new GenerationError("The AI returned an incomplete result. Please try again.", 502, "bad_output");
   }
-  return response.parsed_output as z.infer<T>;
+  return response.output_parsed as z.infer<T>;
 }
 
 /** Map any thrown error to a safe, user-facing JSON response. */
@@ -71,28 +72,37 @@ export function errorResponse(err: unknown) {
 
   console.error("[CreatorKit] generation failed:", err);
 
-  if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
+  if (err instanceof OpenAI.AuthenticationError || err instanceof OpenAI.PermissionDeniedError) {
     return Response.json(
-      { error: "The AI API key is invalid or lacks access. Check ANTHROPIC_API_KEY.", code: "auth" },
+      { error: "The AI API key is invalid or lacks access. Check OPENAI_API_KEY.", code: "auth" },
       { status: 503 },
     );
   }
-  if (err instanceof Anthropic.RateLimitError) {
+  if (err instanceof OpenAI.NotFoundError) {
     return Response.json(
-      { error: "Too many requests right now. Wait a moment and try again.", code: "rate_limited" },
+      { error: `The AI model "${MODEL}" isn't available to this API key. Check OPENAI_MODEL.`, code: "model" },
+      { status: 503 },
+    );
+  }
+  if (err instanceof OpenAI.RateLimitError) {
+    return Response.json(
+      {
+        error: "Too many requests, or the API account is out of credits. Wait a moment and try again.",
+        code: "rate_limited",
+      },
       { status: 429 },
     );
   }
-  if (err instanceof Anthropic.APIConnectionTimeoutError) {
+  if (err instanceof OpenAI.APIConnectionTimeoutError) {
     return Response.json({ error: "The AI took too long to respond. Please try again.", code: "timeout" }, { status: 504 });
   }
-  if (err instanceof Anthropic.APIConnectionError) {
+  if (err instanceof OpenAI.APIConnectionError) {
     return Response.json({ error: "Couldn't reach the AI service. Check your connection and try again.", code: "network" }, { status: 503 });
   }
-  if (err instanceof Anthropic.BadRequestError) {
+  if (err instanceof OpenAI.BadRequestError) {
     return Response.json({ error: "The AI service rejected the request. Please adjust your inputs and try again.", code: "bad_request" }, { status: 400 });
   }
-  if (err instanceof Anthropic.APIError) {
+  if (err instanceof OpenAI.APIError) {
     return Response.json({ error: "The AI service is having trouble. Please try again shortly.", code: "upstream" }, { status: 502 });
   }
   return Response.json({ error: "Something went wrong. Please try again.", code: "unknown" }, { status: 500 });
